@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "3663377",
+      "name": "定位",
+      "font_class": "dingwei1",
+      "unicode": "e6a2",
+      "unicode_decimal": 59042
+    },
+    {
+      "icon_id": "36130148",
+      "name": "定位-copy",
+      "font_class": "dingwei1-copy",
+      "unicode": "eaf8",
+      "unicode_decimal": 60152
+    },
+    {
       "icon_id": "10635169",
       "name": "定位-位置",
       "font_class": "position",
