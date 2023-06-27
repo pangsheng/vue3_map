@@ -2,15 +2,17 @@
 import { RouterLink, RouterView, matchedRouteKey } from "vue-router";
 import mapType from './views/mapType.vue'
 import scaleButton from "./views/scaleButton.vue";
-import {onMounted ,reactive} from "vue";
-import localImage from'./static/images/localImage.png'
+import { onMounted, reactive,ref } from "vue";
+import localImage from './static/images/localImage.png'
+import { axios } from './server/axios.ts'
 
 // 地图相关变量
 var map: any;
 var T = window.T;
-let LngLat = reactive({'LngLat':new T.LngLat(36, 112)});
+let LngLat = reactive({ 'LngLat': new T.LngLat(36, 112) });
 let scale = new T.Control.Scale();
-
+let provinceCoordinate: any
+let defalutScale=12;
 
 
 onMounted(() => {
@@ -21,12 +23,57 @@ onMounted(() => {
  */
 const mapInit = async () => {
     map = new T.Map("mapDiv");
-    LngLat.LngLat = await getPosMessage(null,null);
-    map.centerAndZoom(LngLat.LngLat,12);//创建地图
+    LngLat.LngLat = await getPosMessage(null, null);
+    map.centerAndZoom(LngLat.LngLat, defalutScale);//创建地图
+    map.addEventListener('zoomend',function() {
+        defalutScale = map.getZoom();
+    });
     map.addControl(scale);//添加比例尺控件
     showMarker(map, LngLat.LngLat);//创建定位标记
+    incloseProvince();
 }
 
+/**
+ * 添加省级覆盖物
+ */
+ async function incloseProvince() {
+    var points: any[] = [];
+    await axios.get('../public/local.json').then((value: any) => {
+        provinceCoordinate = value.features;
+    })
+    provinceCoordinate.forEach((element: any) => {
+        let temp: any;
+        var polygon;
+        if (element.properties.name === '内蒙古自治区') {
+            temp = element.geometry.coordinates[0];
+        } else {
+            temp = element.geometry.coordinates[0][0];
+        }
+        temp.forEach((item: any) => {
+            points.push(new T.LngLat(item[0], item[1]));
+            //创建面对象
+            polygon = new T.Polygon(points, {
+                color: "blue", weight: 3, opacity: 0, fillOpacity: 0
+            });
+            displayPolygon(polygon);
+        });
+        map.addOverLay(polygon);
+        points = [];
+    });
+}
+
+/**
+ * 添加覆盖物事件
+ * @param polygon 覆盖物对象
+ */
+function displayPolygon(polygon: any) {
+    polygon.addEventListener("mouseover", () => {
+        if(defalutScale<8){polygon.setOpacity(.6)}
+    });
+    polygon.addEventListener("mouseout", () => {
+        if(defalutScale<8){polygon.setOpacity(0)}
+    });
+}
 /**
  * 切换放大倍数
  * @param type 放大或者缩小
@@ -65,8 +112,8 @@ function getPosition() {
     })
 }
 
-async function getPosMessage(e: any,defLngLat:any) {
-    if(defLngLat!==null){
+async function getPosMessage(e: any, defLngLat: any) {
+    if (defLngLat !== null) {
         e?.callback(defLngLat);
         return null
     }
@@ -105,20 +152,20 @@ function changeMapType(type: number, mapDom: any) {
  * @param map 
  * @param coordinate 
  */
-function showMarker(map: any, coordinate: any=null) {
-    let point=new T.Point(16,32)
-    let markImg=new T.Icon({
-        iconUrl:localImage,
-        iconAnchor:point,
+function showMarker(map: any, coordinate: any = null) {
+    let point = new T.Point(16, 32)
+    let markImg = new T.Icon({
+        iconUrl: localImage,
+        iconAnchor: point,
     })
     //创建标注对象
-    var marker = new T.Marker(coordinate, { draggable: true ,icon:markImg});
-    marker.addEventListener("mouseup", (e:any)=>{
-        let target=e;
-        LngLat.LngLat=target.lnglat
+    var marker = new T.Marker(coordinate, { draggable: true, icon: markImg });
+    marker.addEventListener("mouseup", (e: any) => {
+        let target = e;
+        LngLat.LngLat = target.lnglat
     });
     //向地图上添加标注
-      map.addOverLay(marker);
+    map.addOverLay(marker);
 }
 </script>
 
