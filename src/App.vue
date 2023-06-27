@@ -2,14 +2,15 @@
 import { RouterLink, RouterView, matchedRouteKey } from "vue-router";
 import mapType from './views/mapType.vue'
 import scaleButton from "./views/scaleButton.vue";
-import {onMounted } from "vue";
+import {onMounted ,reactive} from "vue";
 import localImage from'./static/images/localImage.png'
 
 // 地图相关变量
 var map: any;
 var T = window.T;
-let LngLat = new T.LngLat(112, 36);
+let LngLat = reactive({'LngLat':new T.LngLat(36, 112)});
 let scale = new T.Control.Scale();
+
 
 
 onMounted(() => {
@@ -20,11 +21,10 @@ onMounted(() => {
  */
 const mapInit = async () => {
     map = new T.Map("mapDiv");
-    map.centerAndZoom(LngLat);//创建地图
-    LngLat = await getPosMessage(null,null);
+    LngLat.LngLat = await getPosMessage(null,null);
+    map.centerAndZoom(LngLat.LngLat,12);//创建地图
     map.addControl(scale);//添加比例尺控件
-    map.panTo(LngLat, 12);//切换至当前定位
-    showMarker(map, LngLat);//创建定位标记
+    showMarker(map, LngLat.LngLat);//创建定位标记
 }
 
 /**
@@ -115,8 +115,7 @@ function showMarker(map: any, coordinate: any=null) {
     var marker = new T.Marker(coordinate, { draggable: true ,icon:markImg});
     marker.addEventListener("mouseup", (e:any)=>{
         let target=e;
-        console.log(target);
-        LngLat=target.lnglat
+        LngLat.LngLat=target.lnglat
     });
     //向地图上添加标注
       map.addOverLay(marker);
@@ -126,7 +125,7 @@ function showMarker(map: any, coordinate: any=null) {
 <template>
     <div id="funBox">
         <!-- 按钮 -->
-        <scaleButton @changeZoom="changeZoom" @getPosMessage="getPosMessage($event,null)"/>
+        <scaleButton @changeZoom="changeZoom" :LngLat="LngLat.LngLat"/>
         <!-- 切换地图类型 -->
         <mapType @changeMapType="changeMapType" />
     </div>

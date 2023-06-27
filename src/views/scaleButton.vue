@@ -1,17 +1,14 @@
 <script setup lang='ts'>
-import { reactive, onMounted, ref } from "vue";
+import { reactive} from "vue";
 let scaleShow = reactive({ value0: false, value1: false });
-let emits=defineEmits(['changeZoom','getPosMessage']);
-let LngLatValue:any=reactive({localMessage:null});
-emits('getPosMessage',{callback:(result:any)=>{
-  LngLatValue.localMessage=result;
-}});
+let emits=defineEmits(['changeZoom']);
+let props=defineProps({'LngLat':Object})
 </script>
 
 <template>
   <!-- 缩放按钮 -->
   <div id="scale-box" style="width: 30px;">
-    <span class="zoom-change" @click="emits('changeZoom',12,LngLatValue.localMessage)">
+    <span class="zoom-change" @click="emits('changeZoom',12,props.LngLat)">
       <svg class="icon current-icon ps-iconset-local" aria-hidden="true">
         <use xlink:href="#icon-dingwei"></use>
       </svg>
