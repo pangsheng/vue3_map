@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, matchedRouteKey } from "vue-router";
-import mapType from './views/mapType.vue'
-import scaleButton from "./views/scaleButton.vue";
-import { onMounted, reactive,ref } from "vue";
+import { onMounted, reactive, ref, nextTick } from "vue";
 import localImage from './static/images/localImage.png'
 import { axios } from './server/axios.ts'
+import mapType from './views/mapType.vue'
+import scaleButton from "./views/scaleButton.vue";
+import mapColor from './views/mapColor.vue';
 
 // 地图相关变量
 var map: any;
@@ -12,8 +13,8 @@ var T = window.T;
 let LngLat = reactive({ 'LngLat': new T.LngLat(36, 112) });
 let scale = new T.Control.Scale();
 let provinceCoordinate: any
-let defalutScale=12;
-
+let defalutScale = 12;
+let mapDivDom = ref();
 
 onMounted(() => {
     mapInit();
@@ -25,10 +26,11 @@ const mapInit = async () => {
     map = new T.Map("mapDiv");
     LngLat.LngLat = await getPosMessage(null, null);
     map.centerAndZoom(LngLat.LngLat, defalutScale);//创建地图
-    map.addEventListener('zoomend',function() {
+    map.addEventListener('zoomend', function () {
         defalutScale = map.getZoom();
     });
     map.addControl(scale);//添加比例尺控件
+
     showMarker(map, LngLat.LngLat);//创建定位标记
     incloseProvince();
 }
@@ -36,7 +38,7 @@ const mapInit = async () => {
 /**
  * 添加省级覆盖物
  */
- async function incloseProvince() {
+async function incloseProvince() {
     var points: any[] = [];
     await axios.get('../public/local.json').then((value: any) => {
         provinceCoordinate = value.features;
@@ -68,10 +70,10 @@ const mapInit = async () => {
  */
 function displayPolygon(polygon: any) {
     polygon.addEventListener("mouseover", () => {
-        if(defalutScale<8){polygon.setOpacity(.6)}
+        if (defalutScale < 8) { polygon.setOpacity(.6) }
     });
     polygon.addEventListener("mouseout", () => {
-        if(defalutScale<8){polygon.setOpacity(0)}
+        if (defalutScale < 8) { polygon.setOpacity(0) }
     });
 }
 /**
@@ -172,14 +174,16 @@ function showMarker(map: any, coordinate: any = null) {
 <template>
     <div id="funBox">
         <!-- 按钮 -->
-        <scaleButton @changeZoom="changeZoom" :LngLat="LngLat.LngLat"/>
+        <scaleButton @changeZoom="changeZoom" :LngLat="LngLat.LngLat" />
         <!-- 切换地图类型 -->
         <mapType @changeMapType="changeMapType" />
+        <mapColor :mapDivDom="mapDivDom"/>
     </div>
-    <div id="mapDiv"></div>
+    <div id="mapDiv" ref="mapDivDom">
+    </div>
 </template>
 
-<style scoped>
+<style>
 body {
     margin: 0;
     padding: 0;
