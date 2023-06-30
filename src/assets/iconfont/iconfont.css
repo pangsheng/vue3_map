@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 4129260 */
-  src: url('iconfont.woff2?t=1687682769626') format('woff2'),
-       url('iconfont.woff?t=1687682769626') format('woff'),
-       url('iconfont.ttf?t=1687682769626') format('truetype');
+  src: url('iconfont.woff2?t=1688110456381') format('woff2'),
+       url('iconfont.woff?t=1688110456381') format('woff'),
+       url('iconfont.ttf?t=1688110456381') format('truetype');
 }
 
 .iconfont {
@@ -13,12 +13,68 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.icon-dingwei1:before {
-  content: "\e6a2";
+.icon-xiala:before {
+  content: "\e6b9";
+}
+
+.icon-biaoji:before {
+  content: "\e672";
+}
+
+.icon-daohang:before {
+  content: "\e651";
+}
+
+.icon-chizi:before {
+  content: "\e62d";
+}
+
+.icon-daochutupian:before {
+  content: "\e647";
+}
+
+.icon-dayinji_o:before {
+  content: "\eb48";
+}
+
+.icon-dapingzhanshi:before {
+  content: "\e670";
+}
+
+.icon-book:before {
+  content: "\e780";
+}
+
+.icon-layer:before {
+  content: "\e613";
+}
+
+.icon-bg-tool:before {
+  content: "\e63d";
+}
+
+.icon-earth-full:before {
+  content: "\e9ee";
+}
+
+.icon-route1:before {
+  content: "\e6ab";
+}
+
+.icon-dituhuizhi:before {
+  content: "\e61d";
+}
+
+.icon-dingwei2:before {
+  content: "\e61f";
 }
 
 .icon-dingwei1-copy:before {
   content: "\eaf8";
+}
+
+.icon-dingwei1:before {
+  content: "\e6a2";
 }
 
 .icon-position:before {

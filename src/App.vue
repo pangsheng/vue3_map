@@ -1,208 +1,108 @@
-<script setup lang="ts">
-import { RouterLink, RouterView, matchedRouteKey } from "vue-router";
-import { onMounted, reactive, ref, nextTick } from "vue";
-import localImage from './static/images/localImage.png'
-import { axios } from './server/axios.ts'
-import mapType from './views/mapType.vue'
-import scaleButton from "./views/scaleButton.vue";
-import mapColor from './views/mapColor.vue';
+<script setup lang='ts'>
+import { onMounted } from 'vue';
+import scaleButton from './views/nativeJs/scaleButton.vue'
+import mapList from './views/mapList.vue'
 
-// 地图相关变量
-var map: any;
-var T = window.T;
-let LngLat = reactive({ 'LngLat': new T.LngLat(36, 112) });
-let scale = new T.Control.Scale();
-let provinceCoordinate: any
-let defalutScale = 12;
-let mapDivDom = ref();
 
+let map: any = null;
+let point: any[] = [];
+const tileOptions = {
+  minZoom: 1,
+  maxZoom: 12
+}
+var normal: any
+// 初始化地图
+const initMap = async () => {
+
+  // 定义矢量地图
+  var normalm = L.tileLayer.chinaProvider('TianDiTu.Normal.Map', tileOptions)
+  // 定义矢量注记
+  var normala = L.tileLayer.chinaProvider('TianDiTu.Normal.Annotion', tileOptions)
+  // 组合地图和注记
+  normal = L.layerGroup([normalm, normala])
+  await getPosition().then((value: any) => {
+    point[1] = String(value.longitude).match(/\d+\.\d{0,6}/)?.[0];
+    point[0] = String(value.latitude).match(/\d+\.\d{0,6}/)?.[0];
+  }).catch((err) => {
+    console.log(err);
+  });
+  map = L.map('mapBox', {
+    center: point,
+    zoom: 12,
+    layers: [normal],
+    zoomControl: false,
+    maxZoom:18,
+    minZoom:1
+  })
+  let marker = L.marker(point).addTo(map);
+
+}
+// 加载地图
 onMounted(() => {
-    mapInit();
+  initMap();
 })
-/**
- * 初始化地图
- */
-const mapInit = async () => {
-    map = new T.Map("mapDiv");
-    LngLat.LngLat = await getPosMessage(null, null);
-    map.centerAndZoom(LngLat.LngLat, defalutScale);//创建地图
-    map.addEventListener('zoomend', function () {
-        defalutScale = map.getZoom();
-    });
-    map.addControl(scale);//添加比例尺控件
-
-    showMarker(map, LngLat.LngLat);//创建定位标记
-    incloseProvince();
-}
-
-/**
- * 添加省级覆盖物
- */
-async function incloseProvince() {
-    var points: any[] = [];
-    await axios.get('../public/local.json').then((value: any) => {
-        provinceCoordinate = value.features;
-    })
-    provinceCoordinate.forEach((element: any) => {
-        let temp: any;
-        var polygon;
-        if (element.properties.name === '内蒙古自治区') {
-            temp = element.geometry.coordinates[0];
-        } else {
-            temp = element.geometry.coordinates[0][0];
+function getPosition() {//获取经纬度
+  return new Promise((resolve, reject) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function (position) {
+          let latitude = position.coords.latitude;
+          let longitude = position.coords.longitude;
+          let data = {
+            latitude: latitude,
+            longitude: longitude,
+          };
+          resolve(data);
+        },
+        function () {
+          reject(arguments);
         }
-        temp.forEach((item: any) => {
-            points.push(new T.LngLat(item[0], item[1]));
-            //创建面对象
-            polygon = new T.Polygon(points, {
-                color: "blue", weight: 3, opacity: 0, fillOpacity: 0
-            });
-            displayPolygon(polygon);
-        });
-        map.addOverLay(polygon);
-        points = [];
-    });
+      );
+    } else {
+      reject("你的浏览器不支持当前地理位置信息获取");
+    }
+  });
 }
 
-/**
- * 添加覆盖物事件
- * @param polygon 覆盖物对象
- */
-function displayPolygon(polygon: any) {
-    polygon.addEventListener("mouseover", () => {
-        if (defalutScale < 8) { polygon.setOpacity(.6) }
-    });
-    polygon.addEventListener("mouseout", () => {
-        if (defalutScale < 8) { polygon.setOpacity(0) }
-    });
-}
 /**
  * 切换放大倍数
- * @param type 放大或者缩小
+ * @param type 判断放大还是缩小  0放大  1缩小 其他是跳转定位
+ * @param backPoint 定位坐标
  */
-function changeZoom(type: number, LngLat: any) {
-    if (type < 0) { return null }
-    if (type === 0) {
-        map.zoomIn();
-    } else if (type === 1) {
-        map.zoomOut();
-    } else {
-        map.panTo(LngLat, type);
-    }
-}
-
-/**
- * 获取当前定位
- */
-function getPosition() {
-    return new Promise((resolve, reject) => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                let latitude = position.coords.latitude;
-                let longitude = position.coords.longitude;
-                let data = {
-                    latitude: latitude,
-                    longitude: longitude,
-                };
-                resolve(data);
-            }, () => {
-                reject(arguments);
-            })
-        } else {
-            reject('浏览器不支持当前地理位置信息获取');
-        }
-    })
-}
-
-async function getPosMessage(e: any, defLngLat: any) {
-    if (defLngLat !== null) {
-        e?.callback(defLngLat);
-        return null
-    }
-    let LngLat: any
-    await getPosition().then((value: any) => {
-        let Longitude = String(value.longitude).match(/\d+\.\d{0,6}/)?.[0];
-        let latitude = String(value.latitude).match(/\d+\.\d{0,6}/)?.[0];
-        LngLat = new T.LngLat(Longitude, latitude);
-    });
-    e?.callback(LngLat);
-    return LngLat
-}
-
-/**
- * 切换地图类型
- * @param type 切换类型
- */
-function changeMapType(type: number, mapDom: any) {
-    for (const key in mapDom) {
-        if (Object.prototype.hasOwnProperty.call(mapDom, key)) {
-            mapDom[key].className = 'flodDiv';
-        }
-    }
-    mapDom[type].className = 'flodDiv flodDivBlue'
-    switch (type) {
-        case 0: map.setMapType(TMAP_HYBRID_MAP); break;
-        case 1: map.setMapType(window.TMAP_SATELLITE_MAP); break;
-        case 2: map.setMapType(window.TMAP_TERRAIN_HYBRID_MAP); break;
-        case 3: map.setMapType(window.TMAP_TERRAIN_MAP); break;
-        case 4: map.setMapType(window.TMAP_NORMAL_MAP); break;
-    }
-
-}
-/**
- * 添加定位标记
- * @param map 
- * @param coordinate 
- */
-function showMarker(map: any, coordinate: any = null) {
-    let point = new T.Point(16, 32)
-    let markImg = new T.Icon({
-        iconUrl: localImage,
-        iconAnchor: point,
-    })
-    //创建标注对象
-    var marker = new T.Marker(coordinate, { draggable: true, icon: markImg });
-    marker.addEventListener("mouseup", (e: any) => {
-        let target = e;
-        LngLat.LngLat = target.lnglat
-    });
-    //向地图上添加标注
-    map.addOverLay(marker);
+function changeZoom(type: number, backPoint: any) {
+  if (type > 1) {
+    map.panTo(backPoint, type)
+    // map.removeLayer(normal);
+    // let newmap = L.tileLayer.chinaProvider('GaoDe.Normal.Map', tileOptions);
+    // let sss=L.layerGroup([newmap])
+    // map.addLayer(sss)
+  }
+  switch (type) {
+    case 0: map.zoomIn(); break;
+    case 1: map.zoomOut(); break;
+  }
 }
 </script>
 
 <template>
-    <div id="funBox">
-        <!-- 按钮 -->
-        <scaleButton @changeZoom="changeZoom" :LngLat="LngLat.LngLat" />
-        <!-- 切换地图类型 -->
-        <mapType @changeMapType="changeMapType" />
-        <mapColor :mapDivDom="mapDivDom"/>
-    </div>
-    <div id="mapDiv" ref="mapDivDom">
-    </div>
+  <div id="funBox">
+    <!-- 按钮 -->
+    <scaleButton @changeZoom="changeZoom" :point="point" />
+    <!-- 地图列表 工具 -->
+    <mapList></mapList>
+  </div>
+  <div id='mapBox'>
+  </div>
 </template>
 
-<style>
-body {
-    margin: 0;
-    padding: 0;
-}
-
-/* 地图容器 */
-#mapDiv {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-}
-
-
-/* 功能区域 */
+<style scoped>
 #funBox {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 10;
+  position: fixed;
+  z-index: 1000;
+}
+
+#mapBox {
+  width: 100vw;
+  height: 100vh;
 }
 </style>

@@ -1,14 +1,16 @@
 <script setup lang='ts'>
 import { reactive} from "vue";
 let scaleShow = reactive({ value0: false, value1: false });
-let emits=defineEmits(['changeZoom']);
-let props=defineProps({'LngLat':Object})
+let emits=defineEmits(['changeZoom','getPosition']);
+
+let props=defineProps({'point':Array})
+console.log(props);
 </script>
 
 <template>
   <!-- 缩放按钮 -->
   <div id="scale-box" style="width: 30px;">
-    <span class="zoom-change" @click="emits('changeZoom',12,props.LngLat)">
+    <span class="zoom-change" @click="emits('changeZoom',12,props.point)">
       <svg class="icon current-icon ps-iconset-local" aria-hidden="true">
         <use xlink:href="#icon-dingwei"></use>
       </svg>
@@ -34,7 +36,7 @@ let props=defineProps({'LngLat':Object})
 /* 缩放按钮 */
 #scale-box {
     position: fixed;
-    bottom: 104px;
+    bottom: 34px;
     right: 20px;
 }
 
