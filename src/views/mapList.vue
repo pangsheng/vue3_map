@@ -1,25 +1,3 @@
-<script setup lang='ts'>
-import { onMounted, ref } from 'vue';
-let listHover = ref();
-let listBox = ref();
-
-onMounted(() => {
-  listHover.value.onmouseover = (e: any) => {
-    listBox.value.style.height = 'auto';
-    listBox.value.style.border = '1px solid skyblue';
-  }
-  listBox.value.onmouseover = (e: any) => {
-    listBox.value.style.height = 'auto';
-    listBox.value.style.border = '1px solid skyblue';
-  }
-  listBox.value.onmouseout = (e: any) => {
-    listBox.value.style.height = '0px';
-    listBox.value.style.border = '';
-  }
-})
-
-</script>
-
 <template>
   <div id='mapList'>
     <div class="title">
@@ -156,6 +134,27 @@ onMounted(() => {
     </div>
   </div>
 </template>
+<script setup lang='ts'>
+import { onMounted, ref } from 'vue';
+let listHover = ref();
+let listBox = ref();
+
+onMounted(() => {
+  listHover.value.onmouseover = (e: any) => {
+    listBox.value.style.height = 'auto';
+    listBox.value.style.border = '1px solid skyblue';
+  }
+  listBox.value.onmouseover = (e: any) => {
+    listBox.value.style.height = 'auto';
+    listBox.value.style.border = '1px solid skyblue';
+  }
+  listBox.value.onmouseout = (e: any) => {
+    listBox.value.style.height = '0px';
+    listBox.value.style.border = '';
+  }
+})
+
+</script>
 
 <style scoped>
 #mapList {
@@ -181,6 +180,7 @@ onMounted(() => {
   display: flex;
   height: 30px;
   justify-content: center;
+  line-height: 26px;
 }
 
 .iconBox span {
@@ -199,7 +199,7 @@ onMounted(() => {
 #mapList .title .custom-style {
   width: 18px;
   height: 18px;
-  margin-top: 4px;
+  margin-top: 6px;
   margin-right: 4px;
 }
 
@@ -210,7 +210,7 @@ onMounted(() => {
   height: 0px;
   position: fixed;
   right: 16px;
-  top: 50px;
+  top: 51px;
   background-color: white;
   line-height: 36px;
   text-align: center;

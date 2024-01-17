@@ -1,31 +1,46 @@
+<template>
+  <div id="funBox">
+    <!-- 按钮 -->
+    <scaleButton @changeZoom="changeZoom" :point="point" />
+    <!-- 地图列表 工具 -->
+    <mapList></mapList>
+  </div>
+  <div id='mapBox'>
+  </div>
+</template>
 <script setup lang='ts'>
-import { onMounted } from 'vue';
+import { onMounted,ref } from 'vue';
 import scaleButton from './views/nativeJs/scaleButton.vue'
 import mapList from './views/mapList.vue'
 
+/******** 初始化变量 ********/
 
 let map: any = null;
-let point: any[] = [];
+let marker:any =null;
+let point: any[] = [39.916527,116.397128];
 const tileOptions = {
   minZoom: 1,
   maxZoom: 12
 }
 var normal: any
+/******** 初始化变量 end********/
+
+/******** 逻辑函数********/
+
 // 初始化地图
 const initMap = async () => {
-
   // 定义矢量地图
   var normalm = L.tileLayer.chinaProvider('TianDiTu.Normal.Map', tileOptions)
   // 定义矢量注记
   var normala = L.tileLayer.chinaProvider('TianDiTu.Normal.Annotion', tileOptions)
   // 组合地图和注记
   normal = L.layerGroup([normalm, normala])
-  await getPosition().then((value: any) => {
-    point[1] = String(value.longitude).match(/\d+\.\d{0,6}/)?.[0];
-    point[0] = String(value.latitude).match(/\d+\.\d{0,6}/)?.[0];
-  }).catch((err) => {
-    console.log(err);
-  });
+  // await getPosition().then((value: any) => {
+  //   point[1] = String(value.longitude).match(/\d+\.\d{0,6}/)?.[0];
+  //   point[0] = String(value.latitude).match(/\d+\.\d{0,6}/)?.[0];
+  // }).catch((err) => {
+  //   console.log(err);
+  // });
   map = L.map('mapBox', {
     center: point,
     zoom: 12,
@@ -34,18 +49,28 @@ const initMap = async () => {
     maxZoom:18,
     minZoom:1
   })
-  let marker = L.marker(point).addTo(map);
-
+  map.addEventListener("drag", locationCenter);
+  map.addEventListener("zoomend", locationCenter);
+  marker = L.marker(point).addTo(map);
 }
-// 加载地图
-onMounted(() => {
-  initMap();
-})
-function getPosition() {//获取经纬度
+
+/**
+ * 设置标记到中心点
+ */
+function locationCenter(){
+  let centerPoint=map.getCenter();
+  marker.setLatLng(centerPoint)
+}
+
+/**
+ * 获取当前经纬度
+ */
+ function getPosition() {
   return new Promise((resolve, reject) => {
     if (navigator.geolocation) {
+      console.log(navigator.geolocation)
       navigator.geolocation.getCurrentPosition(
-        function (position) {
+        (position)=>{
           let latitude = position.coords.latitude;
           let longitude = position.coords.longitude;
           let data = {
@@ -54,7 +79,7 @@ function getPosition() {//获取经纬度
           };
           resolve(data);
         },
-        function () {
+        ()=>{
           reject(arguments);
         }
       );
@@ -82,18 +107,16 @@ function changeZoom(type: number, backPoint: any) {
     case 1: map.zoomOut(); break;
   }
 }
-</script>
+/******** 逻辑函数 end********/
 
-<template>
-  <div id="funBox">
-    <!-- 按钮 -->
-    <scaleButton @changeZoom="changeZoom" :point="point" />
-    <!-- 地图列表 工具 -->
-    <mapList></mapList>
-  </div>
-  <div id='mapBox'>
-  </div>
-</template>
+/******** 生命周期********/
+// 加载地图
+onMounted(() => {
+  initMap();
+})
+/******** 生命周期 end********/
+
+</script>
 
 <style scoped>
 #funBox {
